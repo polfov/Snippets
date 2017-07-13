@@ -1,0 +1,65 @@
+project.services.testimonial = project.services.testimonial || {};
+
+project.services.testimonial.post = function (testimonial, onSuccess, onError) {
+    var settings = {
+        cache: false
+        , success: onSuccess
+        , error: onError
+        , contentType: "application/json; charset=UTF-8"
+        , dataType: "json"
+        , data: JSON.stringify(testimonial)
+        , type: "POST"
+    };
+    $.ajax("/api/testimonials/", settings);
+}
+
+project.services.testimonial.put = function (id, testimonial, onSuccess, onError) {
+    testimonial.id = id;
+    var settings = {
+        cache: false
+        , success: onSuccess
+        , error: onError
+        , contentType: "application/json; charset=UTF-8"
+        , dataType: "json"
+        , data: JSON.stringify(testimonial)
+        , type: "PUT"
+    };
+    $.ajax("/api/testimonials/" + id, settings);
+}
+
+project.services.testimonial.getById = function (id, onSuccess, onError) {
+    var settings = {
+        cache: false
+        , success: onSuccess
+        , error: onError
+        , contentType: "application/x-www-form-urlencoded; charset=UTF-8"
+        , dataType: "json"
+        , data: id
+        , type: "GET"
+    };
+    $.ajax("/api/testimonials/" + id, settings);
+}
+
+project.services.testimonial.getAll = function (onSuccess, onError) {
+    var settings = {
+        cache: false
+        , success: onSuccess
+        , error: onError
+        , contentType: "application/x-www-form-urlencoded; charset=UTF-8"
+        , type: "GET"
+    };
+    $.ajax("/api/testimonials/", settings);
+}
+
+project.services.testimonial.delete = function (id, onSuccess, onError) {
+    var settings = {
+        cache: false
+        , success: onSuccess
+        , error: onError
+        , contentType: "application/x-www-form-urlencoded; charset=UTF-8"
+        , dataType: "json"
+        , data: id
+        , type: "DELETE"
+    };
+    $.ajax("/api/testimonials/" + id, settings);
+}

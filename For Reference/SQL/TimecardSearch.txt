@@ -1,0 +1,35 @@
+
+BEGIN
+	SELECT DISTINCT tce.Id
+		, p.Id AS ProjectId
+		, p.ProjectName
+		, pe.FirstName
+		, pe.LastName
+		, tce.PersonId
+		, tce.TimecardStatusId
+		, tcs.Status
+		, ps.Status AS ProjectStatus
+		, tce.StartDateTimeUtc
+		, tce.StartDateTimeLocal
+		, tce.EndDateTimeUtc
+		, tce.EndDateTimeLocal
+		FROM TimecardEntry tce
+			JOIN Project p 
+		ON tce.ProjectId = p.Id
+			LEFT JOIN ProjectStatus ps
+		ON p.ProjectStatusId = ps.Id
+			JOIN Person pe
+		ON tce.PersonId = pe.Id
+			 LEFT JOIN TimecardStatus tcs
+		ON tcs.Id = tce.TimecardStatusId
+			LEFT JOIN ProjectPerson pp
+		ON pe.Id = pp.PersonId
+		WHERE ((@Id IS NULL) OR tce.Id = @Id)
+			AND ((@ProjectId IS NULL) OR tce.ProjectId = @ProjectId) 
+			AND ((@PersonId IS NULL) OR tce.PersonId = @PersonId)
+			AND ((@TimecardStatusId IS NULL) OR (tce.TimecardStatusId = @TimecardStatusId)) 
+			AND (@StartDateTimeLocal IS NULL OR (tce.StartDateTimeLocal > @StartDateTimeLocal)) 
+			AND (@EndDateTimeLocal IS NULL OR (tce.EndDateTimeLocal < @EndDateTimeLocal)) 
+			AND (@StartDateTimeUtc IS NULL OR (tce.StartDateTimeUtc > @StartDateTimeUtc)) 
+			AND (@EndDateTimeUtc IS NULL OR (tce.EndDateTimeUtc < @EndDateTimeUtc))
+END

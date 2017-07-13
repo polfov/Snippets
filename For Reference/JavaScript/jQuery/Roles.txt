@@ -1,0 +1,150 @@
+        project.page.selectedRole = ""
+        project.page.resultsPerPage = 10
+        project.page.currentPage = 1
+
+        project.page.startUp = function () {
+            project.page.aspNetUserRoleSearch()
+            project.page.handlers.resultView()
+            $(".result-list").on("change", ".role", project.page.handlers.verifyCheckBox)
+            $(".roleSelect").on("change", project.page.handlers.sortByRow)
+            $(".searchBar").on("keyup", project.page.handlers.searchBar)
+            $(".results").on("change", project.page.handlers.resultView)
+            $(".pageNumbers").on("click", ".pageNumber", project.page.handlers.currentPage)
+        }
+
+        project.page.handlers.currentPage = function (event) {
+            var userId = ""
+            var role = ""
+            event.target
+            project.page.currentPage = $(this).closest(".pageNumber").find("a").text()
+            project.services.AspNetUserRole.search(userId, project.page.selectedRole, project.page.currentPage, project.page.resultsPerPage, project.page.searchSuccess, project.page.requestFailed)
+        }
+
+        project.page.handlers.verifyCheckBox = function () {
+            var userId = $(this).closest(".result-info").find(".userId").text()
+            var role = $(this).data("key")
+            if ($(this).closest(".role").prop("checked") == true) {
+                project.page.addRole(userId, role)
+            } else {
+                project.page.removeRole(userId, role)
+            }
+        }
+
+        project.page.handlers.resultView = function () {
+            var userId = ""
+            project.page.currentPage = 1
+            project.page.resultsPerPage = $(".results").val()
+            project.services.AspNetUserRole.search(userId, project.page.selectedRole, project.page.currentPage, project.page.resultsPerPage, project.page.searchSuccess, project.page.requestFailed)
+        }
+
+        project.page.handlers.sortByRow = function () {
+            var userId = ""
+            project.page.currentPage = 1
+            project.page.selectedRole = $(".roleSelect").val()
+            project.services.AspNetUserRole.search(userId, project.page.selectedRole, project.page.currentPage, project.page.resultsPerPage, project.page.searchSuccess, project.page.requestFailed)
+        }
+
+        project.page.handlers.searchBar = function () {
+            var userId = $(".searchBar").val()
+            project.page.currentPage = 1
+            project.services.AspNetUserRole.search(userId, project.page.selectedRole, project.page.currentPage, project.page.resultsPerPage, project.page.searchSuccess, project.page.requestFailed)
+        }
+
+        project.page.resultsSuccess = function (data) {
+            $(".pageNumbers").html("")
+            for (var i = 0; i < Math.ceil((data.items[0].totalRows / project.page.resultsPerPage)) ; i++) {
+                var template = project.page.loadResultTemplate()
+                template.find("a").text(i + 1)
+                if (project.page.currentPage == (i + 1)) {
+                    template.addClass("active")
+                }
+                $(".pageNumbers").append(template)
+            }
+        }
+
+        project.page.addRole = function (userId, role) {
+            project.services.AspNetUserRole.post(userId, role, project.page.roleUpdateSuccess, project.page.requestFailed)
+        }
+
+        project.page.removeRole = function (userId, role) {
+            project.services.AspNetUserRole.delete(userId, role, project.page.roleUpdateSuccess, project.page.requestFailed)
+        }
+
+        project.page.aspNetUserRoleSearch = function () {
+            var userId = ""
+            var role = ""
+            project.services.AspNetUserRole.search(userId, project.page.selectedRole, project.page.currentPage, project.page.resultsPerPage, project.page.searchSuccess, project.page.requestFailed)
+        }
+
+        project.page.searchSuccess = function (data, status, xhr) {
+            if (!data.items) {
+                return;
+            }
+            $(".result-list").html("")
+            for (var i = 0; i < data.items.length; i++) {
+                var template = project.page.loadTemplate()
+                template.find(".userId").text(data.items[i].aspNetUserId)
+                template.find(".fullName").text(data.items[i].firstName + " " + data.items[i].lastName)
+                template.find(".email").text(data.items[i].email)
+                if (data.items[i].hasUsr) {
+                    template.find(".hasUsr").prop("checked", true)
+                }
+                if (data.items[i].hasMgr) {
+                    template.find(".hasMgr").prop("checked", true)
+                }
+                if (data.items[i].hasAdm) {
+                    template.find(".hasAdm").prop("checked", true)
+                }
+                $(".result-list").append(template)
+            }
+            project.page.resultsSuccess(data)
+        }
+
+        project.page.roleUpdateSuccess = function () {
+            toastr.success("Role updated!")
+        }
+
+        project.page.requestFailed = function (xhr, status, errorThrown) {
+            toastr.error("Request Failed")
+        }
+
+        project.page.loadTemplate = function () {
+            return $($("#template").html())
+        }
+
+        project.page.loadResultTemplate = function () {
+            return $($("#indexTemplate").html())
+        }
+    </script>
+
+    <script type="text/html" id="template">
+        <tr class="result-info">
+            <td class="fullName"></td>
+            <td class="email"></td>
+            <td class="userId hidden"></td>
+            <td>
+                <div>
+                    <label>
+                        <input class="hasUsr role" type="checkbox" value="" data-key="User" />
+                    </label>
+                </div>
+            </td>
+            <td>
+                <div>
+                    <label>
+                        <input class="hasMgr role" type="checkbox" value="" data-key="Manager" />
+                    </label>
+                </div>
+            </td>
+            <td>
+                <div>
+                    <label>
+                        <input class="hasAdm role" type="checkbox" value="" data-key="Admin" />
+                    </label>
+                </div>
+            </td>
+        </tr>
+    </script>
+    <script type="text/html" id="indexTemplate">
+        <li class="pageNumber"><a href="javascript:;">1</a></li>
+    </script>

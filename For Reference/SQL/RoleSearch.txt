@@ -1,0 +1,34 @@
+	SELECT @Name = ISNULL(@Name, ''), @Role = ISNULL(@Role, '')
+
+	SELECT p.FirstName
+	, p.LastName
+	, p.Email
+	, p.AspNetUserId
+	, count(*) over () totalRows
+	, CASE WHEN SUM(CASE WHEN anr.[Name] = 'User' THEN 1 ELSE 0 END) = 1 THEN CONVERT (bit, 1) ELSE CONVERT (bit, 0) END AS hasUsr
+	, CASE WHEN SUM(CASE WHEN anr.[Name] = 'Manager' THEN 1 ELSE 0 END) = 1 THEN CONVERT (bit, 1) ELSE CONVERT (bit, 0) END AS hasMgr
+	, CASE WHEN SUM(CASE WHEN anr.[Name] = 'Admin' THEN 1 ELSE 0 END) = 1 THEN CONVERT (bit, 1) ELSE CONVERT (bit, 0) END AS hasAdm
+	INTO #Result
+	FROM Person p
+		LEFT JOIN AspNetUserRoles anur
+		ON p.AspNetUserId = anur.UserId
+		LEFT JOIN AspNetRoles anr
+		ON anur.RoleId = anr.Id
+	WHERE p.IsDeleted = 0
+		AND AspNetUserId IS NOT NULL
+		AND (p.FirstName LIKE '%' + @Name + '%' OR p.LastName LIKE '%' + @Name + '%' OR p.Email LIKE '%' + @Name + '%')		
+	GROUP BY p.FirstName, p.LastName, p.Email, p.AspNetUserId
+	
+
+	SELECT DISTINCT r.*
+	FROM #Result r
+		LEFT JOIN AspNetUserRoles anur
+		ON r.AspNetUserId = anur.UserId
+		LEFT JOIN AspNetRoles anr
+		ON anur.RoleId = anr.Id
+	WHERE (@Role = '' OR anr.[Name] LIKE '%' + @Role + '%')
+	ORDER BY r.FirstName
+	OFFSET @ItemsPerPage * (@CurrentPage - 1) ROWS
+	FETCH NEXT @ItemsPerPage ROWS ONLY
+
+END
